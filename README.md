@@ -29,10 +29,10 @@ ZonZeker is een statische website zonder server of API-sleutels. Alles draait in
 
 **Online via GitHub Pages**
 
-1. Zet deze code op de `main`-branch.
-2. Kies in GitHub *Settings → Pages → Build and deployment → Source* de optie **GitHub Actions**.
-3. De workflow `.github/workflows/pages.yml` publiceert de site. Open de link op je telefoon en kies
-   *Zet op beginscherm* om hem als app te gebruiken.
+1. Kies in GitHub *Settings → Pages → Build and deployment → Source* de optie **GitHub Actions**.
+2. Start de workflow via *Actions → Publiceer op GitHub Pages → Run workflow*. Daarna publiceert hij
+   vanzelf bij elke push naar de standaardbranch.
+3. Open de link op je telefoon en kies *Zet op beginscherm* om hem als app te gebruiken.
 
 (Voor GitHub Pages bij een privé-repository heb je een betaald GitHub-abonnement nodig.)
 
