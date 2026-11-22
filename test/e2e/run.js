@@ -183,6 +183,7 @@ function parseDriveMin(text) {
     check(await page.isVisible('.summary .lead'), 'samenvatting zichtbaar');
     const tabs = await page.$$eval('.tab', (els) => els.map((e) => e.querySelector('.tab-label').textContent));
     check(tabs.length === 5 && tabs[0] === 'Beste dag' && tabs[1] === 'Vandaag', 'tabbladen: ' + tabs.join(', '));
+    check(/zeker$/.test((await page.textContent('.tab .tab-count')).trim()), 'teller op tabblad zegt "zeker"');
 
     const times = await page.$$eval('.p-time', (els) => els.map((e) => e.textContent.trim()));
     const maxMin = Math.max(...times.map(parseDriveMin));
@@ -238,18 +239,32 @@ function parseDriveMin(text) {
     // temperatuur zichtbaar en filter werkt
     const temps = await page.$$eval('.place .p-temp', (els) => els.map((e) => parseInt(e.textContent, 10)));
     check(temps.length > 0, `temperatuur zichtbaar bij ${temps.length} plekken`);
+    const badge10 = Number(await page.textContent('[data-temp="10"] .opt-count'));
     await page.click('[data-temp="10"]');
     const warm = await page.$$eval('.place .p-temp', (els) => els.map((e) => parseInt(e.textContent, 10)));
+    check(badge10 === warm.length, `aantal op de knop ≥ 10° (${badge10}) klopt met de lijst (${warm.length})`);
     check(warm.length > 0 && warm.every((t) => t >= 10), `≥ 10°: ${warm.length} plekken, allemaal minstens 10°`);
     check(/minstens 10°/.test(await page.textContent('.summary .lead')), 'samenvatting noemt de temperatuur');
     const coldCells = await page.$$eval('.strip-day.cold', (els) => els.length);
     check(coldCells > 0, `te koude dagen gedimd in de dagstrook (${coldCells})`);
     await shot(page, 'mobiel-temperatuur.png');
     await page.click('[data-temp="20"]');
-    check(/minstens 20°/.test(await page.textContent('#list')) || /minstens 20°/.test(await page.textContent('.summary')), '≥ 20°: duidelijke melding als niets warm genoeg is');
-    await page.click('[data-temp="all"]');
+    const emptyText = await page.textContent('#list');
+    check(/nergens 20° of warmer/.test(emptyText) && /Het warmst wordt het in/.test(emptyText), '≥ 20°: melding noemt de warmste plek');
+    check(/Het warmst wordt het in/.test(await page.textContent('.summary')), 'samenvatting noemt de warmste plek');
+    await shot(page, 'mobiel-te-koud.png');
+    const fits = await page.evaluate(() => {
+      const w = window.innerWidth;
+      const bad = [...document.querySelectorAll('.toolbar *, .summary, .empty, .place')].filter((e) => {
+        const r = e.getBoundingClientRect();
+        return r.width && (r.left < -0.5 || r.right > w + 0.5);
+      });
+      return { scrollX: window.scrollX, bad: bad.map((e) => e.className || e.tagName).slice(0, 5) };
+    });
+    check(fits.scrollX === 0 && fits.bad.length === 0, 'alles past binnen de telefoonbreedte' + (fits.bad.length ? ': ' + fits.bad.join(', ') : ''));
+    await page.click('[data-temp-reset]');
     const back = await page.$$eval('.place .p-temp', (els) => els.length);
-    check(back === temps.length, 'alle temperaturen: weer alle plekken');
+    check(back === temps.length && (await page.getAttribute('[data-temp="all"]', 'aria-checked')) === 'true', 'knop "Toon alle temperaturen" zet het filter terug');
 
     // rijtijd verlagen naar 1 uur → minder plekken, met cache
     const before = stats.locations;

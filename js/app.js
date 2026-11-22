@@ -272,7 +272,7 @@
     for (const b of el.types.querySelectorAll('[data-type]')) {
       b.setAttribute('aria-pressed', String(state.types.has(b.dataset.type)));
     }
-    for (const b of el.temp.querySelectorAll('[data-temp]')) {
+    for (const b of el.temp ? el.temp.querySelectorAll('[data-temp]') : []) {
       const v = b.dataset.temp === 'all' ? null : Number(b.dataset.temp);
       b.setAttribute('aria-checked', String(v === state.minTemp));
     }
@@ -326,7 +326,7 @@
     renderView();
   });
 
-  el.temp.addEventListener('click', (e) => {
+  el.temp?.addEventListener('click', (e) => {
     const b = e.target.closest('[data-temp]');
     if (!b) return;
     state.minTemp = b.dataset.temp === 'all' ? null : Number(b.dataset.temp);
@@ -486,36 +486,69 @@
   }
 
   /** Voldoet een dag aan het temperatuurfilter? */
-  function warmEnough(s) {
-    return state.minTemp == null || (s && s.tmax != null && s.tmax >= state.minTemp);
+  function warmEnough(s, min = state.minTemp) {
+    return min == null || (s && s.tmax != null && s.tmax >= min);
   }
 
   /** Zonnigste dag van een plek die ook warm genoeg is. */
-  function bestKeyFor(x) {
+  function bestKeyFor(x, min = state.minTemp) {
     let best = null;
     for (const k of state.data.days) {
       const s = x.summaries[k];
-      if (!s || !s.valid || !warmEnough(s)) continue;
+      if (!s || !s.valid || !warmEnough(s, min)) continue;
       if (!best || s.score > x.summaries[best].score) best = k;
     }
     return best;
   }
 
-  function dayKeyFor(x, tab) {
-    return tab === 'overzicht' ? bestKeyFor(x) : tab;
+  function dayKeyFor(x, tab, min = state.minTemp) {
+    return tab === 'overzicht' ? bestKeyFor(x, min) : tab;
   }
 
-  function summaryFor(x, tab) {
-    const k = dayKeyFor(x, tab);
+  function summaryFor(x, tab, min = state.minTemp) {
+    const k = dayKeyFor(x, tab, min);
     return k ? x.summaries[k] : null;
   }
 
   /** Plekken die nu in de lijst passen (soort, daglicht en temperatuur). */
-  function shownFor(tab) {
+  function shownFor(tab, min = state.minTemp) {
     return visiblePlaces().filter((x) => {
-      const s = summaryFor(x, tab);
-      return s && s.valid && warmEnough(s);
+      const s = summaryFor(x, tab, min);
+      return s && s.valid && warmEnough(s, min);
     });
+  }
+
+  /** Warmste bereikbare plek (op deze dag, of in het overzicht op welke dag dan ook). */
+  function warmest(tab) {
+    let top = null;
+    const days = tab === 'overzicht' ? state.data.days : [tab];
+    for (const x of visiblePlaces()) {
+      for (const k of days) {
+        const s = x.summaries[k];
+        if (!s || !s.valid || s.tmax == null) continue;
+        if (!top || s.tmax > top.t) top = { x, k, t: s.tmax };
+      }
+    }
+    return top;
+  }
+
+  function warmestText(tab) {
+    const w = warmest(tab);
+    if (!w) return '';
+    const when = tab === 'overzicht' ? ` op ${dayLong(w.k, state.data.days)}` : '';
+    return `Het warmst wordt het in <strong>${esc(w.x.place.name)}</strong>: ${fmtTemp(w.t)}${when}, ${fmtDrive(w.x.drive.sec)} rijden.`;
+  }
+
+  /** Aantal plekken per temperatuurkeuze op de filterknoppen. */
+  function renderTempCounts() {
+    if (!el.temp) return;
+    for (const b of el.temp.querySelectorAll('[data-temp]')) {
+      const min = b.dataset.temp === 'all' ? null : Number(b.dataset.temp);
+      const n = shownFor(state.tab, min).length;
+      const label = min == null ? 'Alle<span class="opt-long"> temp.</span>' : `≥ ${min}°`;
+      b.innerHTML = `${label}<span class="opt-count${n ? '' : ' zero'}">${n}</span>`;
+      b.title = `${n} ${n === 1 ? 'plek' : 'plekken'}`;
+    }
   }
 
   function renderView() {
@@ -560,7 +593,7 @@
     let hero = ZZ.icons.classIcon('weinig');
     if (!places.length) {
       lead = state.minTemp != null ? `Geen plekken van minstens ${state.minTemp}° ${within}.` : `Geen bestemmingen gevonden ${within}.`;
-      sub = state.minTemp != null ? 'Kies een lagere temperatuur of een langere rijtijd.' : 'Schuif de rijtijd wat verder op.';
+      sub = state.minTemp != null ? warmestText('overzicht') || 'Kies een lagere temperatuur of een langere rijtijd.' : 'Schuif de rijtijd wat verder op.';
     } else {
       const best = new Map(places.map((x) => [x, bestKeyFor(x)]));
       const byClass = (cls) => places.filter((x) => x.summaries[best.get(x)].cls === cls);
@@ -599,7 +632,7 @@
           `<button type="button" role="tab" class="tab" data-tab="${t.id}" aria-selected="${t.id === state.tab}">` +
           `<span class="tab-label">${esc(t.label)}</span>` +
           (t.sub ? `<span class="tab-sub">${esc(t.sub)}</span>` : '') +
-          `<span class="tab-count${t.count ? '' : ' zero'}" title="${t.count} plekken met zekere zon">${UI.sunSmall}${t.count}</span>` +
+          `<span class="tab-count${t.count ? '' : ' zero'}" title="${t.count} ${t.count === 1 ? 'plek' : 'plekken'} met zekere zon">${UI.sunSmall}${t.count} zeker</span>` +
           '</button>'
       )
       .join('');
@@ -630,6 +663,7 @@
     const tab = state.tab;
     const vis = visiblePlaces();
     renderTabs();
+    renderTempCounts();
 
     const valid = shownFor(tab);
     const tooLate = tab === days[0] ? vis.filter((x) => !(x.summaries[tab] && x.summaries[tab].valid)).length : 0;
@@ -648,11 +682,18 @@
     }
 
     if (!valid.length) {
-      const msg = allLate
-        ? 'Vandaag kom je nergens meer aan voordat het donker wordt. Kijk bij de volgende dagen.'
-        : state.minTemp != null
-          ? `Geen plekken van minstens ${state.minTemp}° om te tonen. Kies een lagere temperatuur of een langere rijtijd.`
-          : 'Geen bestemmingen om te tonen. Zet meer soorten aan of kies een langere rijtijd.';
+      let msg;
+      if (allLate) {
+        msg = '<p>Vandaag kom je nergens meer aan voordat het donker wordt. Kijk bij de volgende dagen.</p>';
+      } else if (state.minTemp != null) {
+        const period = tab === 'overzicht' ? `de komende ${days.length} dagen` : dayLong(tab, days);
+        msg =
+          `<p>Binnen ${fmtHours(state.data.maxHours)} rijden wordt het ${period} nergens ${state.minTemp}° of warmer.</p>` +
+          (warmestText(tab) ? `<p class="sub">${warmestText(tab)}</p>` : '') +
+          '<button type="button" class="btn btn-soft" data-temp-reset>Toon alle temperaturen</button>';
+      } else {
+        msg = '<p>Geen bestemmingen om te tonen. Zet meer soorten aan of kies een langere rijtijd.</p>';
+      }
       el.items.innerHTML = `<div class="empty card">${msg}</div>`;
       return;
     }
@@ -794,6 +835,13 @@
   }
 
   el.items.addEventListener('click', (e) => {
+    if (e.target.closest('[data-temp-reset]')) {
+      state.minTemp = null;
+      syncControls();
+      saveSettings();
+      renderView();
+      return;
+    }
     const goto = e.target.closest('[data-goto]');
     if (goto) {
       state.tab = goto.dataset.goto;
