@@ -84,6 +84,7 @@
             <li><strong>Zeker zon</strong>: gemiddeld minstens 65% zon, ook het somberste model ziet nog 50% of meer, en hooguit een kwart van de modellen verwacht regen.</li>
             <li><strong>Waarschijnlijk zonnig</strong>: gemiddeld minstens 45% zon, en de modellen lopen niet ver uiteen.</li>
             <li>Voor <strong>vandaag</strong> tellen alleen de uren na aankomst, als je nu vertrekt.</li>
+            <li><strong>Temperatuur</strong> is de hoogste temperatuur overdag, gemiddeld over de modellen. Met het temperatuurfilter zie je alleen dagen die minstens zo warm worden.</li>
             <li>Rijtijden komen van de OSRM-routeplanner (OpenStreetMap), met 10% marge voor verkeer. Als dat niet lukt, zie je een schatting.</li>
           </ul>
         </div>
@@ -104,6 +105,12 @@
           <div class="segmented small" role="radiogroup" aria-label="Volgorde" id="sort">
             <button type="button" role="radio" data-sort="drive" aria-checked="true">Dichtstbij</button>
             <button type="button" role="radio" data-sort="sun" aria-checked="false">Meeste zon</button>
+          </div>
+          <div class="segmented small temp-filter" role="radiogroup" aria-label="Minimale temperatuur overdag" id="temp">
+            <button type="button" role="radio" data-temp="all" aria-checked="true">Alle temp.</button>
+            <button type="button" role="radio" data-temp="10" aria-checked="false">≥ 10°</button>
+            <button type="button" role="radio" data-temp="15" aria-checked="false">≥ 15°</button>
+            <button type="button" role="radio" data-temp="20" aria-checked="false">≥ 20°</button>
           </div>
           <div class="chips" id="types" role="group" aria-label="Soort bestemming">
             <button type="button" class="chip" data-type="stad" aria-pressed="true">Stad</button>

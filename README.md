@@ -19,6 +19,8 @@ op basis van hoe lang je bereid bent te rijden. Je kiest een vertrekplaats en ee
   "Zeker zon" betekent dat ze het eens zijn.
 - Per plek: zon per model, zon per uur, regenkans, maximumtemperatuur en een knop **Route plannen**
   (Google Maps).
+- **Temperatuur** per plek en per dag (hoogste temperatuur overdag), met een filter
+  **Alle temp. / ≥ 10° / ≥ 15° / ≥ 20°**. Dagen die te koud zijn worden gedimd of weggelaten.
 - Filter op **stad, kust, natuur of bergen**.
 - **Thuis**-regel: zo zie je meteen of je wel hoeft te rijden.
 - Onthoudt je instellingen, werkt in licht en donker thema, en is als app op je telefoon te zetten.

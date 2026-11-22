@@ -5,6 +5,7 @@
   const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Amsterdam';
   const SETTINGS_KEY = 'zz.settings.v1';
   const NEAR_HOME_KM = 12;
+  const TEMP_OPTIONS = [10, 15, 20];
   const TYPES = ['stad', 'kust', 'natuur', 'bergen'];
   const TYPE_LABEL = { stad: 'Stad', kust: 'Kust', natuur: 'Natuur', bergen: 'Bergen' };
   const CLASS_BY_ID = Object.fromEntries(ZZ.CLASSES.map((c) => [c.id, c]));
@@ -25,6 +26,7 @@
     tabs: $('#tabs'),
     sort: $('#sort'),
     types: $('#types'),
+    temp: $('#temp'),
     dayNote: $('#day-note'),
     items: $('#list'),
   };
@@ -35,6 +37,7 @@
     days: 4,
     sort: 'drive',
     types: new Set(TYPES),
+    minTemp: null, // null = elke temperatuur, anders minimale maximumtemperatuur overdag
     tab: 'overzicht',
     showWeak: {}, // per tab: 'weinig'-groep uitgeklapt
     open: new Set(), // uitgeklapte plekken
@@ -53,6 +56,7 @@
       if (s.days === 3 || s.days === 4) state.days = s.days;
       if (s.sort === 'drive' || s.sort === 'sun') state.sort = s.sort;
       if (Array.isArray(s.types) && s.types.length) state.types = new Set(s.types.filter((t) => TYPES.includes(t)));
+      if (TEMP_OPTIONS.includes(s.minTemp)) state.minTemp = s.minTemp;
     } catch (_) {
       /* niets bewaard */
     }
@@ -68,6 +72,7 @@
           days: state.days,
           sort: state.sort,
           types: [...state.types],
+          minTemp: state.minTemp,
         })
       );
     } catch (_) {
@@ -267,6 +272,10 @@
     for (const b of el.types.querySelectorAll('[data-type]')) {
       b.setAttribute('aria-pressed', String(state.types.has(b.dataset.type)));
     }
+    for (const b of el.temp.querySelectorAll('[data-temp]')) {
+      const v = b.dataset.temp === 'all' ? null : Number(b.dataset.temp);
+      b.setAttribute('aria-checked', String(v === state.minTemp));
+    }
   }
 
   let rerunTimer = 0;
@@ -314,7 +323,16 @@
     }
     syncControls();
     saveSettings();
-    renderList();
+    renderView();
+  });
+
+  el.temp.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-temp]');
+    if (!b) return;
+    state.minTemp = b.dataset.temp === 'all' ? null : Number(b.dataset.temp);
+    syncControls();
+    saveSettings();
+    renderView();
   });
 
   el.form.addEventListener('submit', async (e) => {
@@ -424,7 +442,7 @@
           earliestMs: now + drive.sec * 1000,
         });
         summaries[days[0]] = today[days[0]];
-        places.push({ place: p, drive, summaries, best: ZZ.bestDay(summaries, days) });
+        places.push({ place: p, drive, summaries });
       }
 
       const homeWx = forecasts.get('__home');
@@ -467,8 +485,47 @@
     return state.data.places.filter((x) => state.types.has(x.place.type));
   }
 
+  /** Voldoet een dag aan het temperatuurfilter? */
+  function warmEnough(s) {
+    return state.minTemp == null || (s && s.tmax != null && s.tmax >= state.minTemp);
+  }
+
+  /** Zonnigste dag van een plek die ook warm genoeg is. */
+  function bestKeyFor(x) {
+    let best = null;
+    for (const k of state.data.days) {
+      const s = x.summaries[k];
+      if (!s || !s.valid || !warmEnough(s)) continue;
+      if (!best || s.score > x.summaries[best].score) best = k;
+    }
+    return best;
+  }
+
+  function dayKeyFor(x, tab) {
+    return tab === 'overzicht' ? bestKeyFor(x) : tab;
+  }
+
   function summaryFor(x, tab) {
-    return tab === 'overzicht' ? (x.best ? x.summaries[x.best] : null) : x.summaries[tab];
+    const k = dayKeyFor(x, tab);
+    return k ? x.summaries[k] : null;
+  }
+
+  /** Plekken die nu in de lijst passen (soort, daglicht en temperatuur). */
+  function shownFor(tab) {
+    return visiblePlaces().filter((x) => {
+      const s = summaryFor(x, tab);
+      return s && s.valid && warmEnough(s);
+    });
+  }
+
+  function renderView() {
+    if (!state.data) return;
+    renderSummary();
+    renderList();
+  }
+
+  function fmtTemp(t) {
+    return nf0.format(Math.round(t)) + '°';
   }
 
   function homeHtml() {
@@ -482,9 +539,10 @@
         .map((k) => {
           const s = homeSummaries[k];
           const val = s && s.valid ? pct(s.mean) : '–';
+          const temp = s && s.valid && s.tmax != null ? `<span class="hd-temp">${fmtTemp(s.tmax)}</span>` : '';
           return (
             `<span class="home-day" title="${esc(dayLong(k, days))}">` +
-            `<span class="hd-label">${esc(dayLabel(k, days))}</span>${wxIcon(s)}<span class="hd-val">${val}</span></span>`
+            `<span class="hd-label">${esc(dayLabel(k, days))}</span>${wxIcon(s)}<span class="hd-val">${val}</span>${temp}</span>`
           );
         })
         .join('') +
@@ -493,31 +551,34 @@
   }
 
   function renderSummary() {
-    const { places, days, maxHours, start } = state.data;
+    const { days, maxHours, start } = state.data;
+    const places = shownFor('overzicht');
+    const warm = state.minTemp != null ? ` en minstens ${state.minTemp}°` : '';
     const within = `binnen ${fmtHours(maxHours)} rijden van ${esc(start.name)}`;
     let lead;
     let sub = '';
     let hero = ZZ.icons.classIcon('weinig');
     if (!places.length) {
-      lead = `Geen bestemmingen gevonden ${within}.`;
-      sub = 'Schuif de rijtijd wat verder op.';
+      lead = state.minTemp != null ? `Geen plekken van minstens ${state.minTemp}° ${within}.` : `Geen bestemmingen gevonden ${within}.`;
+      sub = state.minTemp != null ? 'Kies een lagere temperatuur of een langere rijtijd.' : 'Schuif de rijtijd wat verder op.';
     } else {
-      const byClass = (cls) => places.filter((x) => x.best && x.summaries[x.best].cls === cls);
+      const best = new Map(places.map((x) => [x, bestKeyFor(x)]));
+      const byClass = (cls) => places.filter((x) => x.summaries[best.get(x)].cls === cls);
       const sure = byClass('zeker');
       const likely = byClass('waarschijnlijk');
       const nearest = (arr) => arr.slice().sort((a, b) => a.drive.sec - b.drive.sec)[0];
       if (sure.length) {
         const n = nearest(sure);
         hero = ZZ.icons.classIcon('zeker');
-        lead = `<strong>${sure.length} ${sure.length === 1 ? 'plek' : 'plekken'} met zekere zon</strong> ${within}`;
-        sub = `Dichtstbij: <strong>${esc(n.place.name)}</strong>, ${fmtDrive(n.drive.sec)} rijden, ${dayLong(n.best, days)}.`;
+        lead = `<strong>${sure.length} ${sure.length === 1 ? 'plek' : 'plekken'} met zekere zon${warm}</strong> ${within}`;
+        sub = `Dichtstbij: <strong>${esc(n.place.name)}</strong>, ${fmtDrive(n.drive.sec)} rijden, ${dayLong(best.get(n), days)}.`;
       } else if (likely.length) {
         const n = nearest(likely);
         hero = ZZ.icons.classIcon('waarschijnlijk');
-        lead = `Geen zekere zon ${within}, maar <strong>waarschijnlijk zonnig op ${likely.length} ${likely.length === 1 ? 'plek' : 'plekken'}</strong>`;
-        sub = `Dichtstbij: <strong>${esc(n.place.name)}</strong>, ${fmtDrive(n.drive.sec)} rijden, ${dayLong(n.best, days)}.`;
+        lead = `Geen zekere zon${warm} ${within}, maar <strong>waarschijnlijk zonnig op ${likely.length} ${likely.length === 1 ? 'plek' : 'plekken'}</strong>`;
+        sub = `Dichtstbij: <strong>${esc(n.place.name)}</strong>, ${fmtDrive(n.drive.sec)} rijden, ${dayLong(best.get(n), days)}.`;
       } else {
-        lead = `De komende ${days.length} dagen is er ${within} weinig zon te vinden`;
+        lead = `De komende ${days.length} dagen is er ${within} weinig zon te vinden${warm ? ' bij die temperatuur' : ''}`;
         sub = 'Probeer een langere rijtijd.';
       }
     }
@@ -529,17 +590,9 @@
 
   function renderTabs() {
     const { days } = state.data;
-    const vis = visiblePlaces();
-    const tabs = [
-      { id: 'overzicht', label: 'Beste dag', sub: `${days.length} dagen`, count: vis.filter((x) => x.best && x.summaries[x.best].cls === 'zeker').length },
-    ];
-    for (const k of days) {
-      tabs.push({
-        id: k,
-        ...dayTab(k, days),
-        count: vis.filter((x) => x.summaries[k] && x.summaries[k].cls === 'zeker').length,
-      });
-    }
+    const sureCount = (tab) => shownFor(tab).filter((x) => summaryFor(x, tab).cls === 'zeker').length;
+    const tabs = [{ id: 'overzicht', label: 'Beste dag', sub: `${days.length} dagen`, count: sureCount('overzicht') }];
+    for (const k of days) tabs.push({ id: k, ...dayTab(k, days), count: sureCount(k) });
     el.tabs.innerHTML = tabs
       .map(
         (t) =>
@@ -578,11 +631,9 @@
     const vis = visiblePlaces();
     renderTabs();
 
-    const valid = vis.filter((x) => {
-      const s = summaryFor(x, tab);
-      return s && s.valid;
-    });
-    const tooLate = vis.length - valid.length;
+    const valid = shownFor(tab);
+    const tooLate = tab === days[0] ? vis.filter((x) => !(x.summaries[tab] && x.summaries[tab].valid)).length : 0;
+    const allLate = tooLate > 0 && tooLate === vis.length;
 
     if (tab === days[0]) {
       el.dayNote.hidden = false;
@@ -597,9 +648,10 @@
     }
 
     if (!valid.length) {
-      const msg =
-        tab === days[0] && vis.length
-          ? 'Vandaag kom je nergens meer aan voordat het donker wordt. Kijk bij de volgende dagen.'
+      const msg = allLate
+        ? 'Vandaag kom je nergens meer aan voordat het donker wordt. Kijk bij de volgende dagen.'
+        : state.minTemp != null
+          ? `Geen plekken van minstens ${state.minTemp}° om te tonen. Kies een lagere temperatuur of een langere rijtijd.`
           : 'Geen bestemmingen om te tonen. Zet meer soorten aan of kies een langere rijtijd.';
       el.items.innerHTML = `<div class="empty card">${msg}</div>`;
       return;
@@ -641,12 +693,18 @@
         .map((k) => {
           const s = x.summaries[k];
           const ok = s && s.valid;
+          const cold = ok && !warmEnough(s);
+          const temp = ok && s.tmax != null ? fmtTemp(s.tmax) : '';
+          const title = ok
+            ? `${pct(s.mean)} zon${temp ? ', max ' + temp : ''}${cold ? ', kouder dan ' + state.minTemp + '°' : ''}`
+            : 'niet bij daglicht te halen';
           return (
-            `<button type="button" class="strip-day${k === highlight ? ' best' : ''}${ok ? ' cls-' + s.cls : ' na'}" data-goto="${k}" ` +
-            `title="${esc(dayLong(k, days))}: ${ok ? pct(s.mean) + ' zon' : 'niet bij daglicht te halen'}">` +
+            `<button type="button" class="strip-day${k === highlight ? ' best' : ''}${ok ? ' cls-' + s.cls : ' na'}${cold ? ' cold' : ''}" data-goto="${k}" ` +
+            `title="${esc(dayLong(k, days))}: ${title}">` +
             `<span class="sd-label">${esc(dayLabel(k, days))}</span>` +
             `<span class="sd-icon">${wxIcon(s)}</span>` +
             `<span class="sd-val">${ok ? pct(s.mean) : '–'}</span>` +
+            `<span class="sd-temp">${temp || '&nbsp;'}</span>` +
             '</button>'
           );
         })
@@ -701,9 +759,13 @@
     );
   }
 
+  function tempClass(t) {
+    return t >= 20 ? ' t-warm' : t >= 15 ? ' t-mild' : t >= 10 ? ' t-fris' : ' t-koud';
+  }
+
   function placeHtml(x, tab, index) {
     const { days } = state.data;
-    const dayKey = tab === 'overzicht' ? x.best : tab;
+    const dayKey = dayKeyFor(x, tab);
     const s = x.summaries[dayKey];
     const p = x.place;
     const open = state.open.has(p.id);
@@ -716,6 +778,7 @@
       `<span class="p-name">${esc(p.name)}<span class="cc">${p.cc}</span></span>` +
       `<span class="p-meta">${TYPE_LABEL[p.type]} · ${esc(p.region)}</span>` +
       `<span class="p-sun">${when}<span class="p-sunh">${nf1.format(s.sunH)} u zon</span><span class="p-pct">${pct(s.mean)}</span>` +
+      (s.tmax != null ? `<span class="p-temp${tempClass(s.tmax)}">${UI.thermo}${fmtTemp(s.tmax)}</span>` : '') +
       `<span class="meter" aria-hidden="true"><span style="width:${Math.round(s.mean * 100)}%"></span></span></span>` +
       '</span>' +
       '<span class="p-drive">' +

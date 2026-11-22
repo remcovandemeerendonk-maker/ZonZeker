@@ -77,7 +77,13 @@ function forecastResponse(url) {
         return solarElevation(lat, lon, t * 1000 - 1800000) > 3 ? Math.round(sunFrac(lat, lon, day, mi) * 3600) : 0;
       });
       hourly['precipitation_' + m] = time.map((t, i) => (sunFrac(lat, lon, Math.floor(i / 24), mi) < 0.2 && i % 5 === 0 ? 0.4 : 0));
-      hourly['temperature_2m_' + m] = time.map((t, i) => Math.round((10 - (55 - lat) * 0.3 + Math.sin(i / 4) * 3) * 10) / 10);
+      // Zuidelijker is warmer; overdag een paar graden hoger dan 's nachts.
+      hourly['temperature_2m_' + m] = time.map((t, i) => {
+        const hourOfDay = (i + 0) % 24;
+        const daytime = Math.max(0, Math.sin(((hourOfDay - 7) / 12) * Math.PI));
+        const dayShift = [0, -2.5, 2, -1, 0][Math.floor(i / 24)];
+        return Math.round((4 + (54 - lat) * 0.9 + daytime * 4 + dayShift + mi * 0.3) * 10) / 10;
+      });
     });
     return { latitude: lat, longitude: lon, hourly };
   });
@@ -229,6 +235,22 @@ function parseDriveMin(text) {
     check(metas.length > 0 && metas.every((m) => m.startsWith('Kust')), `filter kust: ${metas.length} plekken`);
     for (const t of ['stad', 'natuur', 'bergen']) await page.click(`.chip[data-type="${t}"]`);
 
+    // temperatuur zichtbaar en filter werkt
+    const temps = await page.$$eval('.place .p-temp', (els) => els.map((e) => parseInt(e.textContent, 10)));
+    check(temps.length > 0, `temperatuur zichtbaar bij ${temps.length} plekken`);
+    await page.click('[data-temp="10"]');
+    const warm = await page.$$eval('.place .p-temp', (els) => els.map((e) => parseInt(e.textContent, 10)));
+    check(warm.length > 0 && warm.every((t) => t >= 10), `≥ 10°: ${warm.length} plekken, allemaal minstens 10°`);
+    check(/minstens 10°/.test(await page.textContent('.summary .lead')), 'samenvatting noemt de temperatuur');
+    const coldCells = await page.$$eval('.strip-day.cold', (els) => els.length);
+    check(coldCells > 0, `te koude dagen gedimd in de dagstrook (${coldCells})`);
+    await shot(page, 'mobiel-temperatuur.png');
+    await page.click('[data-temp="20"]');
+    check(/minstens 20°/.test(await page.textContent('#list')) || /minstens 20°/.test(await page.textContent('.summary')), '≥ 20°: duidelijke melding als niets warm genoeg is');
+    await page.click('[data-temp="all"]');
+    const back = await page.$$eval('.place .p-temp', (els) => els.length);
+    check(back === temps.length, 'alle temperaturen: weer alle plekken');
+
     // rijtijd verlagen naar 1 uur → minder plekken, met cache
     const before = stats.locations;
     await page.$eval('#hours', (e) => {
@@ -261,6 +283,10 @@ function parseDriveMin(text) {
     await pickUtrecht(page);
     const count = await page.$$eval('.place', (els) => els.length);
     check(count > 20, `${count} plekken binnen 6 uur`);
+    await page.click('[data-temp="10"]');
+    const warm6 = await page.$$eval('.place .p-temp', (els) => els.map((e) => parseInt(e.textContent, 10)));
+    check(warm6.length > 0 && warm6.length < count && warm6.every((t) => t >= 10), `≥ 10°: ${warm6.length} van ${count} plekken over, allemaal minstens 10°`);
+    await page.click('[data-temp="all"]');
     const sticky = await page.$eval('.side', (e) => getComputedStyle(e).position);
     check(sticky === 'sticky', 'instellingen als vaste zijbalk op desktop');
     await shot(page, 'desktop-donker.png');
