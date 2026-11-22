@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ZonZeker</title>
+  <meta name="description" content="Waar schijnt de zon de komende dagen, binnen jouw rijafstand?">
+  <meta name="theme-color" content="#fbbf5a" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#17140f" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="ZonZeker">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="sky" aria-hidden="true"><div class="sky-sun"></div></div>
+
+  <header class="top wrap">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 4.5v5M24 38.5v5M4.5 24h5M38.5 24h5M10.2 10.2l3.6 3.6M34.2 34.2l3.6 3.6M10.2 37.8l3.6-3.6M34.2 13.8l3.6-3.6" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/>
+        <circle cx="24" cy="24" r="10" fill="currentColor"/>
+      </svg>
+      <span>ZonZeker</span>
+    </div>
+    <p class="tagline">Waar schijnt de zon de komende dagen, binnen jouw rijafstand?</p>
+  </header>
+
+  <div class="layout wrap">
+    <aside class="side">
+      <section class="card settings" aria-label="Zoekinstellingen">
+        <form id="search-form" novalidate>
+          <div class="field">
+            <label for="start" class="label">Vertrek vanaf</label>
+            <div class="combo">
+              <svg class="combo-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5 7 12 7 12s7-7 7-12a7 7 0 0 0-7-7z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.4" fill="currentColor"/></svg>
+              <input id="start" name="start" type="text" autocomplete="off" spellcheck="false"
+                     placeholder="Plaats, bijv. Utrecht" role="combobox" aria-expanded="false"
+                     aria-controls="start-list" aria-autocomplete="list">
+              <button type="button" id="locate" class="locate" title="Gebruik mijn huidige locatie" aria-label="Gebruik mijn huidige locatie">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+              <ul id="start-list" class="suggestions" role="listbox" hidden></ul>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="label-row">
+              <label for="hours" class="label">Maximaal rijden <span class="hint">enkele reis</span></label>
+              <output id="hours-out" for="hours" class="hours-out">3 uur</output>
+            </div>
+            <input type="range" id="hours" name="hours" min="0.5" max="12" step="0.5" value="3">
+            <div class="range-scale" aria-hidden="true"><span>½</span><span>3</span><span>6</span><span>9</span><span>12 u</span></div>
+          </div>
+
+          <div class="field">
+            <span class="label" id="days-label">Periode</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="days-label" id="days">
+              <button type="button" role="radio" data-days="3" aria-checked="false">3 dagen</button>
+              <button type="button" role="radio" data-days="4" aria-checked="true">4 dagen</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="go">
+            <svg class="ui" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Zoek de zon
+          </button>
+        </form>
+      </section>
+
+      <details class="card about">
+        <summary>Hoe werkt ZonZeker?</summary>
+        <div class="about-body">
+          <p>ZonZeker bekijkt ruim 220 steden, kustplaatsen, natuurgebieden en bergdorpen in Nederland en de landen eromheen.
+            Voor elke plek binnen je rijtijd vergelijken we de uurlijkse zonverwachting van vier weermodellen:
+            ECMWF, ICON, GFS en Météo-France.</p>
+          <ul>
+            <li><strong>Zon %</strong>: het deel van de daglichturen (zon hoger dan 5°) waarin de zon schijnt.</li>
+            <li><strong>Zeker zon</strong>: gemiddeld minstens 65% zon, ook het somberste model ziet nog 50% of meer, en hooguit een kwart van de modellen verwacht regen.</li>
+            <li><strong>Waarschijnlijk zonnig</strong>: gemiddeld minstens 45% zon, en de modellen lopen niet ver uiteen.</li>
+            <li>Voor <strong>vandaag</strong> tellen alleen de uren na aankomst, als je nu vertrekt.</li>
+            <li>Rijtijden komen van de OSRM-routeplanner (OpenStreetMap), met 10% marge voor verkeer. Als dat niet lukt, zie je een schatting.</li>
+          </ul>
+        </div>
+      </details>
+    </aside>
+
+    <main class="main">
+      <section id="status" class="status" aria-live="polite"></section>
+
+      <section id="results" class="results" hidden>
+        <div id="summary" class="summary card"></div>
+
+        <div class="tabs-wrap">
+          <div class="tabs" id="tabs" role="tablist" aria-label="Kies een dag"></div>
+        </div>
+
+        <div class="toolbar">
+          <div class="segmented small" role="radiogroup" aria-label="Volgorde" id="sort">
+            <button type="button" role="radio" data-sort="drive" aria-checked="true">Dichtstbij</button>
+            <button type="button" role="radio" data-sort="sun" aria-checked="false">Meeste zon</button>
+          </div>
+          <div class="chips" id="types" role="group" aria-label="Soort bestemming">
+            <button type="button" class="chip" data-type="stad" aria-pressed="true">Stad</button>
+            <button type="button" class="chip" data-type="kust" aria-pressed="true">Kust</button>
+            <button type="button" class="chip" data-type="natuur" aria-pressed="true">Natuur</button>
+            <button type="button" class="chip" data-type="bergen" aria-pressed="true">Bergen</button>
+          </div>
+        </div>
+
+        <p id="day-note" class="day-note" hidden></p>
+        <div id="list" class="list"></div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="foot wrap">
+    <p>Weerdata: <a href="https://open-meteo.com/" rel="noopener" target="_blank">Open-Meteo.com</a> (CC BY 4.0) ·
+      Routes: <a href="https://project-osrm.org/" rel="noopener" target="_blank">OSRM</a>,
+      kaartdata © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a>-bijdragers</p>
+  </footer>
+
+  <script src="js/places.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/routing.js"></script>
+  <script src="js/geocode.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
