@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>ZonZeker promo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
+<style>
+  /* Filmset voor de promovideo: 540×960 CSS-pixels, opgenomen op 2× (1080×1920). Alles hangt af van t. */
+  :root {
+    --ink: #1d1a14;
+    --ink-2: #4b463c;
+    --amber: #f59e0b;
+    --orange: #f97316;
+    --cream: #fbf7ef;
+    --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  html, body { margin: 0; width: 540px; height: 960px; overflow: hidden; background: var(--cream); font-family: var(--font); }
+  .layer { position: absolute; inset: 0; }
+  #warm { background: linear-gradient(180deg, #ffcf6e 0%, #ffe3a6 38%, #fff3dc 70%, #fbf7ef 100%); }
+  #grey { background: linear-gradient(180deg, #7f8ea3 0%, #a9b5c4 45%, #d4dae2 100%); opacity: 0; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(40px); opacity: .55; }
+  #b1 { width: 340px; height: 340px; background: #ffb347; }
+  #b2 { width: 280px; height: 280px; background: #ff8a3d; opacity: .35; }
+  #b3 { width: 300px; height: 300px; background: #ffe066; }
+
+  #sun { position: absolute; left: 50%; top: 0; width: 300px; height: 300px; margin-left: -150px; }
+  #sun .rays { transform-origin: 150px 150px; }
+  #sunGlow { position: absolute; left: 50%; width: 520px; height: 520px; margin-left: -260px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 214, 102, .75) 0%, rgba(255, 190, 70, .25) 40%, transparent 68%); }
+
+  .cloud { position: absolute; width: 300px; height: 160px; }
+
+  #logo { position: absolute; left: 0; right: 0; top: 560px; text-align: center; }
+  #logo .name { font-size: 64px; font-weight: 800; letter-spacing: -0.04em; color: var(--ink); }
+  #logo .name span { display: inline-block; }
+  #logo .tag { margin-top: 6px; font-size: 22px; font-weight: 600; color: var(--ink-2); }
+
+  #caption { position: absolute; left: 32px; right: 32px; top: 74px; }
+  .kicker { display: inline-block; padding: 5px 12px; border-radius: 99px; background: rgba(255,255,255,.75);
+    color: #8a3c00; font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    box-shadow: 0 2px 10px rgba(120, 70, 0, .12); margin-bottom: 12px; }
+  .cap-line { font-size: 40px; line-height: 1.12; font-weight: 800; letter-spacing: -0.035em; color: var(--ink); white-space: nowrap; }
+  .cap-line .w { display: inline-block; margin-right: .22em; }
+  .cap-line .w.hl { background: linear-gradient(90deg, #f59e0b, #f97316); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #caption.center { top: 520px; text-align: center; }
+  #caption.center .cap-line { font-size: 46px; }
+  #caption.light .cap-line { color: #fff; text-shadow: 0 2px 16px rgba(40, 50, 70, .35); }
+
+  #phone { position: absolute; left: 80px; top: 252px; width: 380px; height: 868px; border-radius: 54px; background: #15140f;
+    padding: 12px; box-sizing: border-box; box-shadow: 0 40px 80px -20px rgba(90, 50, 0, .45), 0 0 0 2px #3a372f inset; transform-origin: 50% 0; }
+  #screen { position: relative; width: 356px; height: 844px; border-radius: 42px; overflow: hidden; background: var(--cream); }
+  #app { position: absolute; left: 0; top: 0; width: 390px; height: 924px; border: 0; transform-origin: 0 0; }
+  #island { position: absolute; left: 50%; top: 10px; width: 104px; height: 30px; margin-left: -52px; border-radius: 20px; background: #0b0b0a; z-index: 3; }
+  #status { position: absolute; left: 0; right: 0; top: 0; height: 46px; display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 30px 0 34px; font-size: 14px; font-weight: 700; color: var(--ink); z-index: 2; box-sizing: border-box;
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  #status .bat { width: 24px; height: 11px; border: 1.6px solid var(--ink); border-radius: 3px; position: relative; }
+  #status .bat::after { content: ''; position: absolute; inset: 1.5px; right: 5px; background: var(--ink); border-radius: 1px; }
+
+  #overlay { position: absolute; inset: 0; pointer-events: none; }
+  .ring { position: absolute; border: 3px solid #f97316; border-radius: 16px; box-shadow: 0 0 0 4px rgba(249, 115, 22, .18), 0 0 22px rgba(249, 115, 22, .45); }
+  .finger { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%;
+    background: rgba(255, 255, 255, .55); border: 2px solid rgba(255, 255, 255, .95); box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+  .ripple { position: absolute; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .95); }
+
+  #end { position: absolute; inset: 0; opacity: 0; }
+  #end .icon { position: absolute; left: 50%; top: 250px; width: 190px; height: 190px; margin-left: -95px; border-radius: 46px;
+    box-shadow: 0 30px 60px -18px rgba(200, 90, 0, .55); overflow: hidden; }
+  #end .title { position: absolute; left: 0; right: 0; top: 478px; text-align: center; font-size: 62px; font-weight: 800; letter-spacing: -0.04em; color: var(--ink); }
+  #end .sub { position: absolute; left: 0; right: 0; top: 560px; text-align: center; font-size: 24px; font-weight: 600; color: var(--ink-2); }
+  #end .url { position: absolute; left: 50%; top: 640px; transform: translateX(-50%); white-space: nowrap; padding: 12px 20px; border-radius: 99px;
+    background: #1d1a14; color: #fff; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  #end .url b { color: #fcd34d; }
+  #end .facts { position: absolute; left: 0; right: 0; top: 716px; text-align: center; font-size: 17px; font-weight: 600; color: var(--ink-2); }
+  #end .note { position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; font-size: 12px; font-weight: 500; color: rgba(75, 70, 60, .7); }
+  .star { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; }
+</style>
+</head>
+<body>
+  <div class="layer" id="warm"></div>
+  <div class="layer" id="grey"></div>
+  <div class="blob" id="b1"></div><div class="blob" id="b2"></div><div class="blob" id="b3"></div>
+
+  <div id="sunGlow"></div>
+  <svg id="sun" viewBox="0 0 300 300" aria-hidden="true">
+    <g class="rays" stroke="#fbb424" stroke-width="14" stroke-linecap="round">
+      <path d="M150 18v34M150 248v34M18 150h34M248 150h34M56.7 56.7l24 24M219.3 219.3l24 24M56.7 243.3l24-24M219.3 80.7l24-24"/>
+    </g>
+    <circle cx="150" cy="150" r="66" fill="#fbb424"/>
+    <circle cx="130" cy="130" r="26" fill="#fff6cc" opacity=".5"/>
+  </svg>
+
+  <div id="clouds"></div>
+
+  <div id="logo"><div class="name" id="logoName"></div><div class="tag" id="logoTag">Waar is het zeker zonnig?</div></div>
+
+  <div id="phone">
+    <div id="screen">
+      <iframe id="app" src="../index.html" title="ZonZeker"></iframe>
+      <div id="status"><span>08:30</span><span class="bat"></span></div>
+      <div id="island"></div>
+    </div>
+  </div>
+
+  <div id="caption"></div>
+  <div id="overlay"></div>
+
+  <div id="end">
+    <div class="icon"><img src="../icon.svg" width="190" height="190" alt=""></div>
+    <div class="title">ZonZeker</div>
+    <div class="sub">Vind de zon binnen jouw rijtijd</div>
+    <div class="url"><b>remcovandemeerendonk-maker</b>.github.io/ZonZeker</div>
+    <div class="facts">Gratis · geen account · werkt op elke telefoon</div>
+    <div class="note">Weer in deze video is een voorbeeld</div>
+    <div id="stars"></div>
+  </div>
+
+<script>
+(() => {
+  /* ---------- hulpjes ---------- */
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const lerp = (a, b, p) => a + (b - a) * p;
+  const prog = (t, a, b) => clamp((t - a) / (b - a));
+  const easeOut = (p) => 1 - Math.pow(1 - p, 3);
+  const easeInOut = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+  const easeBack = (p) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+  const $ = (s) => document.querySelector(s);
+
+  let TL = null;
+  const app = $('#app');
+  let doc = null; // document van de app
+  let win = null;
+  const SCALE = 356 / 390;
+
+  /* ---------- wolken ---------- */
+  const CLOUD_SVG = (fill, fill2) => `<svg viewBox="0 0 300 160" class="cloud-svg" width="300" height="160">
+    <g fill="${fill2}"><circle cx="190" cy="70" r="46"/><circle cx="240" cy="96" r="34"/></g>
+    <g fill="${fill}"><circle cx="80" cy="104" r="44"/><circle cx="140" cy="74" r="58"/><circle cx="208" cy="104" r="40"/><rect x="80" y="104" width="128" height="44" rx="6"/></g></svg>`;
+  const CLOUDS = [
+    { x0: -320, x1: -10, y: 120, s: 1.1 }, { x0: 560, x1: 260, y: 230, s: 0.95 },
+    { x0: -300, x1: 30, y: 700, s: 0.95 }, { x0: 600, x1: 280, y: 760, s: 1.15 }, { x0: -200, x1: 150, y: 360, s: 0.7 },
+  ];
+  $('#clouds').innerHTML = CLOUDS.map((c, i) => `<div class="cloud" id="c${i}">${CLOUD_SVG('#eef2f6', '#c9d2dd')}</div>`).join('');
+
+  /* ---------- logo ---------- */
+  const NAME = 'ZonZeker';
+  $('#logoName').innerHTML = [...NAME].map((ch) => `<span>${ch}</span>`).join('');
+
+  /* ---------- sterretjes eindscherm ---------- */
+  const STARS = [[150, 250], [395, 236], [118, 418], [420, 410], [270, 196], [460, 320], [80, 330]];
+  const STAR = '<svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z" fill="#f59e0b"/></svg>';
+  $('#stars').innerHTML = STARS.map((s, i) => `<div class="star" id="s${i}" style="left:${s[0]}px;top:${s[1]}px">${STAR}</div>`).join('');
+
+  /* ---------- ondertitels ---------- */
+  const HIGHLIGHT = ['zon.', 'zonnig?', 'rijden?', '1', 'eerlijk', 'Warm'];
+  function captionHtml(c) {
+    return (c.kicker ? `<div class="kicker">${c.kicker}</div>` : '') +
+      c.lines.map((l) => `<div class="cap-line">${l.split(' ').map((w) => `<span class="w${HIGHLIGHT.includes(w) ? ' hl' : ''}">${w}</span>`).join('')}</div>`).join('');
+  }
+  let shownCaption = -1;
+  function renderCaption(t) {
+    const idx = TL.captions.findIndex((c) => t >= c.from - 0.05 && t < c.to + 0.35);
+    const box = $('#caption');
+    if (idx !== shownCaption) {
+      shownCaption = idx;
+      box.innerHTML = idx >= 0 ? captionHtml(TL.captions[idx]) : '';
+      box.className = idx >= 0 && idx < 2 ? 'center' + (idx === 0 ? ' light' : '') : '';
+    }
+    if (idx < 0) return;
+    const c = TL.captions[idx];
+    const out = prog(t, c.to, c.to + 0.3);
+    const words = box.querySelectorAll('.w, .kicker');
+    words.forEach((w, i) => {
+      const p = easeOut(prog(t, c.from + i * 0.07, c.from + i * 0.07 + 0.42));
+      const y = (1 - p) * 34 - out * 20;
+      w.style.transform = `translateY(${y}px) scale(${0.92 + 0.08 * p})`;
+      w.style.opacity = String(p * (1 - out));
+      w.style.filter = p < 1 ? `blur(${(1 - p) * 6}px)` : '';
+    });
+  }
+
+  /* ---------- app-bediening ---------- */
+  function el(sel) { return doc && doc.querySelector(sel); }
+  function rectOf(node) {
+    if (!node) return null;
+    const r = node.getBoundingClientRect();
+    const ph = $('#phone').getBoundingClientRect();
+    const ox = ph.left + 12, oy = ph.top + 12;
+    const k = ph.width / 380; // fonschaal bij in- en uitvliegen
+    return { x: ox + r.left * SCALE * k, y: oy + r.top * SCALE * k, w: r.width * SCALE * k, h: r.height * SCALE * k };
+  }
+  async function waitFor(fn, ms = 8000) {
+    const t0 = performance.now();
+    while (performance.now() - t0 < ms) { const v = fn(); if (v) return v; await new Promise((r) => setTimeout(r, 30)); }
+    throw new Error('timeout');
+  }
+
+  const done = new Set();
+  async function once(key, t, at, fn) {
+    if (t >= at && !done.has(key)) { done.add(key); await fn(); }
+  }
+
+  // Scrollen in de app, per segment: [start, eind, doelfunctie]
+  const SCROLLS = [
+    { a: 14.75, b: 15.9, to: () => el('#summary').getBoundingClientRect().top + win.scrollY - 54 },
+    { a: 16.15, b: 17.25, to: () => el('.group-head').getBoundingClientRect().top + win.scrollY - 60 },
+    { a: 24.9, b: 25.9, to: () => el('.place.open').getBoundingClientRect().top + win.scrollY - 54 },
+    { a: 28.15, b: 29.15, to: () => el('.toolbar').getBoundingClientRect().top + win.scrollY - 70 },
+    { a: 30.3, b: 31.3, to: () => el('#summary').getBoundingClientRect().top + win.scrollY - 54 },
+  ];
+  function renderScroll(t) {
+    if (!win) return;
+    for (const s of SCROLLS) {
+      if (t < s.a) break;
+      if (s.from === undefined) { s.from = win.scrollY; s.target = Math.max(0, s.to()); }
+      const y = lerp(s.from, s.target, easeInOut(prog(t, s.a, s.b)));
+      if (t <= s.b + 0.05) win.scrollTo(0, y);
+    }
+  }
+
+  // Animaties van de app zelf op de klok van de video zetten.
+  function syncAppAnimations(t) {
+    if (!doc) return;
+    for (const a of doc.getAnimations()) {
+      if (a.__t0 === undefined) a.__t0 = t;
+      a.pause();
+      a.currentTime = Math.max(0, (t - a.__t0) * 1000);
+    }
+  }
+
+  async function drive(t) {
+    const S = TL.slider;
+    if (t >= S.start - 0.2 && t <= S.end + 0.2) {
+      const v = Math.round(lerp(S.from, S.to, easeInOut(prog(t, S.start, S.end))) * 2) / 2;
+      const r = el('#hours');
+      if (r && Number(r.value) !== v) { r.value = String(v); r.dispatchEvent(new win.Event('input', { bubbles: true })); }
+    }
+    const T = TL.typing;
+    await once('focus', t, T.start - 0.3, () => { el('#start').focus(); });
+    for (let i = 0; i < T.text.length; i++) {
+      await once('type' + i, t, T.start + i * T.interval, () => {
+        const inp = el('#start');
+        inp.value = T.text.slice(0, i + 1);
+        inp.dispatchEvent(new win.Event('input', { bubbles: true }));
+      });
+    }
+    await once('sugg', t, T.start + T.text.length * T.interval + 0.2, () => waitFor(() => el('#start-list li')));
+    await once('pick', t, TL.taps[0], async () => {
+      el('#start-list li').dispatchEvent(new win.MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+      await waitFor(() => el('#results:not([hidden]) .place'));
+      win.scrollTo(0, 0);
+    });
+    await once('card', t, TL.taps[1], async () => {
+      el('.place .place-main').click();
+      await waitFor(() => el('.details'));
+    });
+    await once('temp', t, TL.taps[2], async () => {
+      el('[data-temp="10"]').click();
+      await new Promise((r) => setTimeout(r, 50));
+    });
+  }
+
+  // Waar de vinger tikt, per tik.
+  const TAP_TARGET = [() => el('#start-list li'), () => el('.place .place-main .p-name'), () => el('[data-temp="10"]')];
+  const tapPos = [];
+  function renderTouches(t) {
+    const ov = [];
+    TL.taps.forEach((at, i) => {
+      if (t < at - 0.45 || t > at + 0.6) return;
+      if (!tapPos[i] || t < at) { const r = rectOf(TAP_TARGET[i]()); if (r) tapPos[i] = { x: r.x + Math.min(r.w / 2, 60), y: r.y + r.h / 2 }; }
+      const p = tapPos[i];
+      if (!p) return;
+      const appear = easeOut(prog(t, at - 0.45, at - 0.2));
+      const press = t < at ? 1 - 0.18 * prog(t, at - 0.12, at) : 0.82 + 0.18 * prog(t, at, at + 0.15);
+      const leave = prog(t, at + 0.3, at + 0.6);
+      ov.push(`<div class="finger" style="left:${p.x}px;top:${p.y}px;opacity:${appear * (1 - leave)};transform:scale(${press})"></div>`);
+      if (t >= at) {
+        const q = prog(t, at, at + 0.5);
+        const r = 14 + easeOut(q) * 46;
+        ov.push(`<div class="ripple" style="left:${p.x - r}px;top:${p.y - r}px;width:${2 * r}px;height:${2 * r}px;opacity:${1 - q}"></div>`);
+      }
+    });
+    return ov.join('');
+  }
+
+  // Oplichtende kaders rond wat de tekst bedoelt.
+  const RINGS = [
+    { a: 9.0, b: 11.6, sel: () => [el('#hours').closest('.field')] },
+    { a: 12.0, b: 13.9, sel: () => [el('.combo')] },
+    { a: 16.9, b: 19.7, sel: () => [el('.group-head')] },
+    { a: 20.3, b: 23.7, sel: () => [...doc.querySelectorAll('.place .p-drive')].slice(0, 3), stagger: 0.25 },
+    { a: 25.9, b: 27.7, sel: () => [el('.details .models')] },
+    { a: 29.2, b: 29.65, sel: () => [el('[data-temp="10"]')] },
+  ];
+  function renderRings(t) {
+    const out = [];
+    for (const R of RINGS) {
+      if (t < R.a || t > R.b + 0.3 || !doc) continue;
+      const nodes = (R.sel() || []).filter(Boolean);
+      nodes.forEach((n, i) => {
+        const a = R.a + i * (R.stagger || 0);
+        const pin = easeBack(prog(t, a, a + 0.35));
+        const pout = prog(t, R.b, R.b + 0.3);
+        const r = rectOf(n);
+        if (!r || pin <= 0) return;
+        const pad = 6;
+        const pulse = 1 + 0.025 * Math.sin((t - a) * 7);
+        const w = (r.w + pad * 2) * pulse, h = (r.h + pad * 2) * pulse;
+        out.push(`<div class="ring" style="left:${r.x + r.w / 2 - w / 2}px;top:${r.y + r.h / 2 - h / 2}px;width:${w}px;height:${h}px;opacity:${clamp(pin) * (1 - pout)};transform:scale(${0.9 + 0.1 * clamp(pin)})"></div>`);
+      });
+    }
+    return out.join('');
+  }
+
+  /* ---------- het decor ---------- */
+  function renderScene(t) {
+    // Lucht: grijs tussen 4 en 6,3 s
+    const grey = prog(t, 3.9, 4.6) * (1 - prog(t, 5.9, 6.6));
+    $('#grey').style.opacity = String(grey);
+
+    // Zwevende lichtvlekken
+    $('#b1').style.transform = `translate(${-60 + 40 * Math.sin(t * 0.4)}px, ${-80 + 30 * Math.cos(t * 0.33)}px)`;
+    $('#b2').style.transform = `translate(${330 + 30 * Math.cos(t * 0.37)}px, ${120 + 40 * Math.sin(t * 0.29)}px)`;
+    $('#b3').style.transform = `translate(${120 + 50 * Math.sin(t * 0.21)}px, ${640 + 30 * Math.sin(t * 0.45)}px)`;
+    const endDim = 1 - 0.6 * prog(t, 32.1, 32.8);
+    ['#b1', '#b2', '#b3'].forEach((s) => ($(s).style.opacity = String(0.5 * (1 - grey) * endDim)));
+
+    // Zon: komt op (0–1,3 s), wijkt voor wolken (3,8–4,6), breekt door (6,0–6,8), verdwijnt achter de telefoon
+    let sunY, sunS, sunO;
+    if (t < 4) {
+      const p = easeBack(prog(t, 0.1, 1.3));
+      sunY = lerp(820, 250, p); sunS = lerp(0.6, 1, p); sunO = prog(t, 0.05, 0.4);
+    } else if (t < 6) {
+      sunY = 250 - 60 * easeInOut(prog(t, 3.9, 4.6)); sunS = 1; sunO = 1 - 0.85 * prog(t, 3.9, 4.6);
+    } else if (t < 8) {
+      const p = easeBack(prog(t, 6.0, 6.8));
+      sunY = lerp(250, 300, p); sunS = lerp(0.8, 1.15, p); sunO = lerp(0.15, 1, prog(t, 6.0, 6.5));
+    } else {
+      const p = easeInOut(prog(t, 7.9, 8.7));
+      sunY = lerp(300, -40, p); sunS = lerp(1.15, 0.7, p); sunO = 1 - 0.3 * p;
+    }
+    if (t >= 31.8) { const p = easeOut(prog(t, 31.9, 33)); sunO = 0.7 + 0.3 * p; sunY = lerp(-40, 345, p) ; sunS = lerp(0.7, 1.55, p); }
+    const rot = t * 18;
+    $('#sun').style.transform = `translateY(${sunY - 150}px) scale(${sunS})`;
+    $('#sun').style.opacity = String(sunO * (t >= 31.8 ? 0.35 : 1));
+    $('#sun .rays').style.transform = `rotate(${rot}deg)`;
+    $('#sunGlow').style.top = `${sunY - 260}px`;
+    $('#sunGlow').style.opacity = String(sunO * (0.7 + 0.3 * Math.sin(t * 2)) * (1 - 0.6 * grey));
+    $('#sunGlow').style.transform = `scale(${sunS})`;
+
+    // Wolken: drijven binnen (3,9–4,8), wijken uiteen (6,0–6,9)
+    CLOUDS.forEach((c, i) => {
+      const pin = easeOut(prog(t, 3.9 + i * 0.08, 4.9 + i * 0.08));
+      const pout = easeInOut(prog(t, 6.0, 6.9));
+      const dir = c.x1 > 135 ? 1 : -1;
+      const x = lerp(c.x0, c.x1, pin) + dir * 420 * pout + 8 * Math.sin(t * 0.8 + i);
+      const n = $('#c' + i);
+      n.style.transform = `translate(${x}px, ${c.y}px) scale(${c.s})`;
+      n.style.opacity = String(pin > 0 && pout < 1 ? 1 : 0);
+    });
+
+    // Logo (intro)
+    const logoOut = prog(t, 3.6, 4.1);
+    [...document.querySelectorAll('#logoName span')].forEach((s, i) => {
+      const p = easeBack(prog(t, 1.0 + i * 0.06, 1.45 + i * 0.06));
+      s.style.transform = `translateY(${(1 - p) * 40 - logoOut * 30}px) scale(${0.7 + 0.3 * clamp(p, 0, 1.2)})`;
+      s.style.opacity = String(clamp(p) * (1 - logoOut));
+    });
+    const tagP = easeOut(prog(t, 2.0, 2.5));
+    $('#logoTag').style.transform = `translateY(${(1 - tagP) * 20 - logoOut * 30}px)`;
+    $('#logoTag').style.opacity = String(tagP * (1 - logoOut));
+
+    // Telefoon: vliegt binnen op 8 s, weg op 32 s
+    let py, pr, ps, po;
+    if (t < 8) { py = 1000; pr = 20; ps = 1; po = 0; }
+    else if (t < 32) {
+      const p = easeOut(prog(t, 7.85, 8.85));
+      py = lerp(980, 0, p); pr = lerp(24, 0, p); ps = 1; po = 1;
+    } else {
+      const p = easeInOut(prog(t, 31.85, 32.7));
+      py = lerp(0, 900, p); pr = lerp(0, -10, p); ps = lerp(1, 0.9, p); po = 1;
+    }
+    $('#phone').style.transform = `perspective(1400px) translateY(${py}px) rotateX(${pr}deg) scale(${ps})`;
+    $('#phone').style.opacity = String(po);
+
+    // Eindscherm
+    const endIn = prog(t, 32.1, 32.6);
+    $('#end').style.opacity = String(endIn);
+    const ip = easeBack(prog(t, 32.3, 32.95));
+    $('#end .icon').style.transform = `scale(${clamp(ip, 0, 1.2)}) rotate(${(1 - clamp(ip)) * -12}deg)`;
+    const tp = easeOut(prog(t, 32.8, 33.3));
+    $('#end .title').style.cssText += `;opacity:${tp};transform:translateY(${(1 - tp) * 24}px)`;
+    const sp = easeOut(prog(t, 33.2, 33.7));
+    $('#end .sub').style.cssText += `;opacity:${sp};transform:translateY(${(1 - sp) * 20}px)`;
+    const up = easeBack(prog(t, 33.7, 34.2));
+    $('#end .url').style.cssText += `;opacity:${clamp(up)};transform:translateX(-50%) scale(${0.85 + 0.15 * clamp(up, 0, 1.1)})`;
+    const fp = easeOut(prog(t, 34.2, 34.7));
+    $('#end .facts').style.cssText += `;opacity:${fp};transform:translateY(${(1 - fp) * 14}px)`;
+    $('#end .note').style.opacity = String(prog(t, 34.6, 35.2));
+    STARS.forEach((_, i) => {
+      const a = 32.6 + i * 0.09;
+      const p = easeBack(prog(t, a, a + 0.4));
+      const tw = 0.75 + 0.25 * Math.sin((t - a) * 5 + i);
+      const s = $('#s' + i);
+      s.style.opacity = String(clamp(p) * tw);
+      s.style.transform = `scale(${clamp(p, 0, 1.3) * tw}) rotate(${(t - a) * 40}deg)`;
+    });
+  }
+
+  /* ---------- per frame ---------- */
+  window.renderAt = async function (t) {
+    if (doc) await drive(t);
+    renderScene(t);
+    renderCaption(t);
+    renderScroll(t);
+    if (win) {
+      const k = clamp(win.scrollY / 50);
+      $('#status').style.background = `rgba(251, 247, 239, ${0.92 * k})`;
+      $('#status').style.boxShadow = k > 0.5 ? '0 1px 0 rgba(70, 50, 10, .08)' : 'none';
+    }
+    syncAppAnimations(t);
+    $('#overlay').innerHTML = doc ? renderRings(t) + renderTouches(t) : '';
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  };
+
+  window.stageReady = (async () => {
+    TL = await (await fetch('timeline.json')).json();
+    await new Promise((r) => (app.contentDocument && app.contentDocument.readyState === 'complete' ? r() : app.addEventListener('load', r, { once: true })));
+    doc = app.contentDocument;
+    win = app.contentWindow;
+    win.Element.prototype.scrollIntoView = function () {}; // scrollen doet de regie zelf
+    const st = doc.createElement('style');
+    st.textContent = '.top { padding-top: 58px !important; }';
+    doc.head.appendChild(st);
+    app.style.transform = `scale(${SCALE})`;
+    await document.fonts.ready;
+    await doc.fonts.ready;
+    return true;
+  })();
+})();
+</script>
+</body>
+</html>

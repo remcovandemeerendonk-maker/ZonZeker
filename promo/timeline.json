@@ -1,0 +1,20 @@
+{
+  "fps": 30,
+  "duration": 38,
+  "bpm": 120,
+  "slider": { "start": 9.0, "end": 11.0, "from": 0.5, "to": 4 },
+  "typing": { "start": 12.4, "interval": 0.14, "text": "Utrecht" },
+  "taps": [14.0, 24.4, 29.6],
+  "whoosh": [8.0, 32.0],
+  "sparkle": [1.0, 6.1, 16.9, 32.6],
+  "captions": [
+    { "from": 4.3, "to": 6.0, "kicker": "", "lines": ["Grijs boven", "Nederland?"] },
+    { "from": 6.2, "to": 7.9, "kicker": "", "lines": ["Rij gewoon", "naar de zon."] },
+    { "from": 8.4, "to": 11.8, "kicker": "Rijtijd", "lines": ["Hoe ver wil", "je rijden?"] },
+    { "from": 12.1, "to": 15.8, "kicker": "Vertrek", "lines": ["Waar vertrek je?"] },
+    { "from": 16.1, "to": 19.8, "kicker": "Het weer", "lines": ["Eerst: waar is het", "zeker zonnig?"] },
+    { "from": 20.1, "to": 23.8, "kicker": "De rit", "lines": ["Dan: hoe ver is", "het rijden?"] },
+    { "from": 24.1, "to": 27.8, "kicker": "Zekerheid", "lines": ["4 weermodellen.", "1 eerlijk antwoord."] },
+    { "from": 28.1, "to": 31.7, "kicker": "Temperatuur", "lines": ["Warm genoeg?", "Filter erop."] }
+  ]
+}
