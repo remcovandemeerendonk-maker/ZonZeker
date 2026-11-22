@@ -34,6 +34,7 @@ jobs:
           cp -r index.html manifest.webmanifest icon.svg icon-180.png icon-512.png css js _site/
           # Versienummer in de bestandsnamen, zodat browsers na een update geen oude scripts gebruiken.
           sed -i "s/?v=dev/?v=${GITHUB_SHA::8}/g" _site/index.html
+          sed -i "s/__VERSIE__/$(TZ=Europe/Amsterdam date '+%-d-%-m-%Y %H:%M') (${GITHUB_SHA::7})/" _site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

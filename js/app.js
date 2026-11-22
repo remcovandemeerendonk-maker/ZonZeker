@@ -871,6 +871,10 @@
 
   /* ---------- start ---------- */
 
+  // Lokaal (niet via de publicatie) staat er geen versienummer in: dan het regeltje verbergen.
+  const versionEl = document.querySelector('.version');
+  if (versionEl && versionEl.textContent.includes('__')) versionEl.hidden = true;
+
   loadSettings();
   syncControls();
   if (state.start) {
